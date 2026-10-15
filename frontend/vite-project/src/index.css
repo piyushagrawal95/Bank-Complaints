@@ -62,3 +62,59 @@ th { background: #f0f2f5; white-space: nowrap; }
   gap: 16px;
   margin: 16px 0;
 }
+
+.login-card{
+  max-width:380px;
+  margin:80px auto;
+  background: #ffff;
+  padding: 28px;
+  border-radius: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0,12);
+}
+
+.login-card h1{
+  font-size: 22px;
+}
+
+.login-card form{
+  padding:10px;
+  border:1px solid #cbd2d9;
+  border-radius: 6px;
+}
+
+.link-button{
+  background: none;
+  color:#2563eb;
+  padding:0;
+  margin-top:12px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.userbox {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.badge {
+  background: #e0e7ff;
+  color: #3730a3;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  margin-left: 6px;
+  text-transform: capitalize;
+}
+
+.tagline {
+  margin: 2px 0 20px;
+  font-size: 13px;
+  color: #7b8794;
+}

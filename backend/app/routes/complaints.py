@@ -1,12 +1,14 @@
 import logging
 from datetime import date
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter,Depends, HTTPException, Query
 
 from app.db import pool
+from app.deps import get_current_user
+
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/complaints", tags=["complaints"])
+router = APIRouter(prefix="/complaints", tags=["complaints"],dependencies=[Depends(get_current_user)]) #every complaints endpoints need a login
 
 LIST_COLUMNS = (
     "complaint_id, date_received, product, sub_product, issue, company, "

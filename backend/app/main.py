@@ -13,7 +13,7 @@ async def lifespan(app:FastAPI):
     yield
     pool.close() #close them when the app stops
 
-app=FastAPI(title=settings.app_name,lifespan=lifespan)
+app=FastAPI(title=settings.app_name,description="AI-powered complaint handling for banks",lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,

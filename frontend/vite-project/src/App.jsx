@@ -1,10 +1,18 @@
 import { useEffect, useState } from "react";
-import { getComplaints, getProducts } from "./api";
+import {
+  clearToken,
+  getComplaints,
+  getMe,
+  getProducts,
+  getToken,
+  setUnauthorizedHandler,
+} from "./api";
+import Login from "./Login";
 
 const EMPTY = { q: "", product: "", state: "", date_from: "", date_to: "" };
 const PAGE_SIZE = 25;
 
-function App() {
+function ComplaintsPage() {
   const [draft, setDraft] = useState(EMPTY);     // what the user is typing
   const [filters, setFilters] = useState(EMPTY); // filters that are applied
   const [page, setPage] = useState(1);
@@ -57,10 +65,7 @@ function App() {
   const totalPages = data ? data.total_pages : 0;
 
   return (
-    <div className="container">
-      <h1>Complaints AI</h1>
-      <p className="subtitle">Browse and filter customer complaints</p>
-
+    <>
       <form className="filters" onSubmit={applyFilters}>
         <input
           name="q"
@@ -170,6 +175,70 @@ function App() {
           </div>
         </>
       )}
+    </>
+  );
+}
+
+function App() {
+  const [user, setUser] = useState(null);
+  // If a token is saved, we first check that it is still valid
+  const [checking, setChecking] = useState(Boolean(getToken()));
+
+  // When the server says the login has expired, go back to the login page
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      clearToken();
+      setUser(null);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!getToken()) return;
+    getMe()
+      .then(setUser)
+      .catch(() => {
+        // An expired token is cleared by the handler above.
+        // For other errors (for example the server is down) the login page is shown.
+      })
+      .finally(() => setChecking(false));
+  }, []);
+
+  function handleLogout() {
+    clearToken();
+    setUser(null);
+  }
+
+  if (checking) {
+    return (
+      <div className="container">
+        <p className="info">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Login onLoggedIn={setUser} />;
+  }
+
+  return (
+    <div className="container">
+      <header className="topbar">
+        <div>
+          <h1>Complaint Desk</h1>
+          <p className="tagline">AI-powered complaint handling for banks</p>
+        </div>
+        <div className="userbox">
+          <span>
+            {user.full_name || user.email}
+            <span className="badge">{user.role}</span>
+          </span>
+          <button className="secondary" onClick={handleLogout}>
+            Log out
+          </button>
+        </div>
+      </header>
+
+      <ComplaintsPage />
     </div>
   );
 }
