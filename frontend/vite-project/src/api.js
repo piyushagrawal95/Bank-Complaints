@@ -54,7 +54,7 @@ async function request(path, { method="GET", params = {},body } ={}) {
     let message = `Request failed (status ${response.status})`;
     try {
       const body = await response.json();
-      if (typeof body.detail === "string") message = body.detail;
+      if (typeof data.detail === "string") message = body.detail;
       else if (Array.isArray(data.detail)){
         message="Please check the values you entered (valid email,password of at least 8 characters)";
       }

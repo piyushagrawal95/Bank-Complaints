@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     llm_provider: str = "groq"
     llm_model: str = ""
     groq_api_key: str = ""
+    openai_api_key:str=""
+    llm_base_url:str=""
+    llm_timeout_seconds:int=30
     jwt_secret:str = ""
     jwt_algorithm:str = "HS256"
     access_token_minutes:int = 60
