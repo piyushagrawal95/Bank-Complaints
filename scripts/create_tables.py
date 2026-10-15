@@ -5,18 +5,18 @@ import psycopg
 from dotenv import load_dotenv
 
 load_dotenv("backend/.env")
-url=os.getenv("DATABASE_URL")
+url =os.getenv("DATABASE_URL")
 
 if not url:
-    raise SystemExit("Database_URL is empty.Please check env file")
+    raise SystemExit("DATABASE_URL is empty.")
 
-sql=Path("backend/sql/create_complaints.sql").read_text(encoding="utf-8")
+files=sorted(Path("backend/sql").glob("*.sql"))
 
 with psycopg.connect(url) as conn:
-    conn.execute(sql)
-    rows=conn.execute("""
-        Select column_name,data_type,is_nullable from information_schema.columns where table_name='complaints' order by ordinal_position""").fetchall()
+    for f in files:
+        print("Running",f.name)
+        conn.execute(f.read_text(encoding="utf-8"))
+    tables=conn.execute("select table_name from information_schema.tables where table_schema='public' order by table_name").fetchall();
 
 
-for row in rows:
-    print(row)
+print("Tables in database:",[t[0] for t in tables])

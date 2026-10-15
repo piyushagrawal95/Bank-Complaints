@@ -8,6 +8,9 @@ class Settings(BaseSettings):
     llm_provider: str = "groq"
     llm_model: str = ""
     groq_api_key: str = ""
+    jwt_secret:str = ""
+    jwt_algorithm:str = "HS256"
+    access_token_minutes:int = 60
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
