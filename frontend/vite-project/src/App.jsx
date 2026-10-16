@@ -8,9 +8,11 @@ import {
   setUnauthorizedHandler,
 } from "./api";
 import Login from "./Login";
+import Trends from "./Trends";
 
 const EMPTY = { q: "", product: "", state: "", date_from: "", date_to: "" };
 const PAGE_SIZE = 25;
+const TREND_ROLES = ["supervisor", "admin"]; // roles that may see the Trends tab
 
 function ComplaintsPage() {
   const [draft, setDraft] = useState(EMPTY);     // what the user is typing
@@ -181,6 +183,7 @@ function ComplaintsPage() {
 
 function App() {
   const [user, setUser] = useState(null);
+  const [view, setView] = useState("complaints"); // "complaints" or "trends"
   // If a token is saved, we first check that it is still valid
   const [checking, setChecking] = useState(Boolean(getToken()));
 
@@ -206,6 +209,7 @@ function App() {
   function handleLogout() {
     clearToken();
     setUser(null);
+    setView("complaints");
   }
 
   if (checking) {
@@ -219,6 +223,10 @@ function App() {
   if (!user) {
     return <Login onLoggedIn={setUser} />;
   }
+
+  // The server also blocks agents from the trends API. This only hides the tab.
+  const canSeeTrends = TREND_ROLES.includes(user.role);
+  const showTrends = canSeeTrends && view === "trends";
 
   return (
     <div className="container">
@@ -238,7 +246,24 @@ function App() {
         </div>
       </header>
 
-      <ComplaintsPage />
+      {canSeeTrends && (
+        <nav className="tabs">
+          <button
+            className={"tab" + (!showTrends ? " active" : "")}
+            onClick={() => setView("complaints")}
+          >
+            Complaints
+          </button>
+          <button
+            className={"tab" + (showTrends ? " active" : "")}
+            onClick={() => setView("trends")}
+          >
+            Trends
+          </button>
+        </nav>
+      )}
+
+      {showTrends ? <Trends /> : <ComplaintsPage />}
     </div>
   );
 }

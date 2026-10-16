@@ -79,3 +79,4 @@ export const signup=(email,password,fullName)=> request("/auth/signup",{
 export const getMe=()=> request("/auth/me")
 export const getComplaints = (params) => request("/complaints", params);
 export const getProducts = () => request("/complaints/meta/products");
+export const getSpikes=(params)=>request("/trends/spikes",{params});
