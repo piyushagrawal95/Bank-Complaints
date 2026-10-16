@@ -1,0 +1,14 @@
+.detail-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px 20px; margin: 16px 0; background: #fff; }
+.detail-head { display: flex; justify-content: space-between; align-items: center; }
+.detail-meta { color: #64748b; font-size: 14px; }
+.detail-narrative { white-space: pre-wrap; max-height: 220px; overflow-y: auto; line-height: 1.5; }
+.analysis-box p { margin: 8px 0 12px; }
+tr.clickable { cursor: pointer; }
+tr.clickable:hover { background: #f1f5f9; }
+.analysis-note {
+  color: #92400e;
+  background: #fef3c7;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 13px;
+}

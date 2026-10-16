@@ -3,6 +3,12 @@ from datetime import date
 
 from fastapi import APIRouter,Depends, HTTPException, Query
 
+from app.core.config import settings
+from app.llm.analysis import (
+    BASIS_METADATA,BASIS_NARRATIVE,analyze_metadata,analyze_narrative
+)
+from app.llm.client import LLMError
+
 from app.db import pool
 from app.deps import get_current_user
 
@@ -96,10 +102,84 @@ def get_complaint(complaint_id: int):
             row = conn.execute(
                 "SELECT * FROM complaints WHERE complaint_id = %s", [complaint_id]
             ).fetchone()
+            analysis = conn.execute(
+                "SELECT category, summary, model,basis FROM complaint_analysis "
+                "WHERE complaint_id = %s",
+                [complaint_id],
+            ).fetchone()
     except Exception:
         logger.exception("Database error while reading a complaint")
         raise HTTPException(status_code=503, detail="Database is not available. Please try again.")
 
     if row is None:
         raise HTTPException(status_code=404, detail="Complaint not found")
-    return row
+    return {**row,"analysis":analysis}
+
+
+@router.post("/{complaint_id}/analysis")
+def analyze_complaint(complaint_id: int, refresh: bool = False):
+    """Classify and summarize one complaint with the AI.
+
+    With a written story we analyze the story. Without one we use only the
+    labels (product, issue...). The result is saved, so the AI is called only
+    once per complaint. Use ?refresh=true to run it again.
+    """
+    # Step 1: read. The connection is released BEFORE the slow AI call.
+    try:
+        with pool.connection() as conn:
+            row = conn.execute(
+                "SELECT narrative, product, sub_product, issue, sub_issue "
+                "FROM complaints WHERE complaint_id = %s",
+                [complaint_id],
+            ).fetchone()
+            saved = conn.execute(
+                "SELECT category, summary, model, basis FROM complaint_analysis "
+                "WHERE complaint_id = %s",
+                [complaint_id],
+            ).fetchone()
+    except Exception:
+        logger.exception("Database error while reading a complaint")
+        raise HTTPException(status_code=503, detail="Database is not available. Please try again.")
+
+    if row is None:
+        raise HTTPException(status_code=404, detail="Complaint not found")
+    if saved and not refresh:
+        return {"complaint_id": complaint_id, **saved, "cached": True}
+
+    # Step 2: ask the AI (no database connection is held here).
+    narrative = (row["narrative"] or "").strip()
+    try:
+        if narrative:
+            basis = BASIS_NARRATIVE
+            result = analyze_narrative(narrative)
+        else:
+            basis = BASIS_METADATA
+            result = analyze_metadata(
+                row["product"], row["sub_product"], row["issue"], row["sub_issue"]
+            )
+    except LLMError as exc:
+        raise HTTPException(status_code=503, detail=str(exc))
+
+    # Step 3: save the result
+    model = settings.llm_model
+    try:
+        with pool.connection() as conn:
+            conn.execute(
+                "INSERT INTO complaint_analysis (complaint_id, category, summary, model, basis) "
+                "VALUES (%s, %s, %s, %s, %s) "
+                "ON CONFLICT (complaint_id) DO UPDATE SET "
+                "category = EXCLUDED.category, summary = EXCLUDED.summary, "
+                "model = EXCLUDED.model, basis = EXCLUDED.basis, created_at = now()",
+                [complaint_id, result["category"], result["summary"], model, basis],
+            )
+    except Exception:
+        logger.exception("Database error while saving the analysis")
+        raise HTTPException(status_code=503, detail="Database is not available. Please try again.")
+
+    return {
+        "complaint_id": complaint_id,
+        **result,
+        "model": model,
+        "basis": basis,
+        "cached": False,
+    }

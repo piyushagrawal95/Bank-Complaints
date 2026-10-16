@@ -7,6 +7,7 @@ import {
   getToken,
   setUnauthorizedHandler,
 } from "./api";
+import ComplaintDetail from "./ComplaintDetail";
 import Login from "./Login";
 import Trends from "./Trends";
 
@@ -22,6 +23,7 @@ function ComplaintsPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedId, setSelectedId] = useState(null); // complaint opened in the detail card
 
   // Load the product list once, for the dropdown
   useEffect(() => {
@@ -110,6 +112,14 @@ function ComplaintsPage() {
         </button>
       </form>
 
+      {selectedId && (
+        <ComplaintDetail
+          key={selectedId}
+          id={selectedId}
+          onClose={() => setSelectedId(null)}
+        />
+      )}
+
       {error && <div className="error">Could not load complaints: {error}</div>}
       {loading && <p className="info">Loading...</p>}
 
@@ -136,7 +146,11 @@ function ComplaintsPage() {
                 </thead>
                 <tbody>
                   {data.items.map((c) => (
-                    <tr key={c.complaint_id}>
+                    <tr
+                      key={c.complaint_id}
+                      className="clickable"
+                      onClick={() => setSelectedId(c.complaint_id)}
+                    >
                       <td>{c.complaint_id}</td>
                       <td>{c.date_received}</td>
                       <td>{c.product}</td>
