@@ -7,6 +7,7 @@ import {
   getToken,
   setUnauthorizedHandler,
 } from "./api";
+import AskRules from "./AskRules";
 import ComplaintDetail from "./ComplaintDetail";
 import Login from "./Login";
 import Trends from "./Trends";
@@ -197,7 +198,7 @@ function ComplaintsPage() {
 
 function App() {
   const [user, setUser] = useState(null);
-  const [view, setView] = useState("complaints"); // "complaints" or "trends"
+  const [view, setView] = useState("complaints"); // "complaints", "rules", or "trends"
   // If a token is saved, we first check that it is still valid
   const [checking, setChecking] = useState(Boolean(getToken()));
 
@@ -215,7 +216,6 @@ function App() {
       .then(setUser)
       .catch(() => {
         // An expired token is cleared by the handler above.
-        // For other errors (for example the server is down) the login page is shown.
       })
       .finally(() => setChecking(false));
   }, []);
@@ -238,7 +238,6 @@ function App() {
     return <Login onLoggedIn={setUser} />;
   }
 
-  // The server also blocks agents from the trends API. This only hides the tab.
   const canSeeTrends = TREND_ROLES.includes(user.role);
   const showTrends = canSeeTrends && view === "trends";
 
@@ -260,24 +259,37 @@ function App() {
         </div>
       </header>
 
-      {canSeeTrends && (
-        <nav className="tabs">
-          <button
-            className={"tab" + (!showTrends ? " active" : "")}
-            onClick={() => setView("complaints")}
-          >
-            Complaints
-          </button>
+      {/* Tabs navigation for all users */}
+      <nav className="tabs">
+        <button
+          className={"tab" + (view === "complaints" ? " active" : "")}
+          onClick={() => setView("complaints")}
+        >
+          Complaints
+        </button>
+        <button
+          className={"tab" + (view === "rules" ? " active" : "")}
+          onClick={() => setView("rules")}
+        >
+          Ask Rules
+        </button>
+        {canSeeTrends && (
           <button
             className={"tab" + (showTrends ? " active" : "")}
             onClick={() => setView("trends")}
           >
             Trends
           </button>
-        </nav>
-      )}
+        )}
+      </nav>
 
-      {showTrends ? <Trends /> : <ComplaintsPage />}
+      {view === "rules" ? (
+        <AskRules />
+      ) : showTrends ? (
+        <Trends />
+      ) : (
+        <ComplaintsPage />
+      )}
     </div>
   );
 }

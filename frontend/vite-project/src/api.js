@@ -54,8 +54,8 @@ async function request(path, { method="GET", params = {},body } ={}) {
     let message = `Request failed (status ${response.status})`;
     try {
       const body = await response.json();
-      if (typeof data.detail === "string") message = data.detail;
-      else if (Array.isArray(data.detail)){
+      if (typeof body.detail === "string") message = body.detail;
+      else if (Array.isArray(body.detail)){
         message="Please check the values you entered (valid email,password of at least 8 characters)";
       }
     } catch {
@@ -82,3 +82,4 @@ export const getProducts = () => request("/complaints/meta/products");
 export const getSpikes=(params)=>request("/trends/spikes",{params});
 export const getComplaint=(id)=>request(`/complaints/${id}`);
 export const analyzeComplaint=(id,refresh=false)=>request(`/complaints/${id}/analysis`,{method:"POST",params:refresh?{refresh:true}:{}})
+export const askRule=(question)=>request("/regulations/ask",{method:"POST",body:{question}});
